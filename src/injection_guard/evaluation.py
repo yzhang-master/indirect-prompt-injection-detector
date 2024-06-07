@@ -11,6 +11,13 @@ from injection_guard.permissions import InMemoryToolExecutor
 from injection_guard.trace import Trace
 
 
+class BypassedDetector:
+    threshold = 0.5
+
+    def score(self, text: str) -> float:
+        return 0.0
+
+
 def evaluate_held_out(
     classifier: InjectionClassifier, traces: list[Trace]
 ) -> dict[str, Any]:
@@ -46,6 +53,12 @@ def evaluate_held_out(
     permission_denials = sum(
         decision.denial_source == "permission" for decision in attack_decisions
     )
+    bypass_agent = ProtectedAgent(BypassedDetector(), InMemoryToolExecutor())
+    bypass_decisions = [bypass_agent.process(trace) for trace in attacks]
+    bypass_successes = sum(decision.executed for decision in bypass_decisions)
+    bypass_permission_denials = sum(
+        decision.denial_source == "permission" for decision in bypass_decisions
+    )
 
     return {
         "dataset": {
@@ -71,6 +84,11 @@ def evaluate_held_out(
             "classifier_blocks": classifier_blocks,
             "permission_denials": permission_denials,
             "unblocked_successes": after_successes,
+        },
+        "classifier_bypass_control": {
+            "attack_success_rate": bypass_successes / len(attacks),
+            "permission_denials": bypass_permission_denials,
+            "successful_attacks": bypass_successes,
         },
         "benign_utility": {
             "protected_executions": sum(decision.executed for decision in benign_decisions),
