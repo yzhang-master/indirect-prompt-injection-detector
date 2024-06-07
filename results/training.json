@@ -1,0 +1,8 @@
+{
+  "training_examples": 32,
+  "training_attacks": 16,
+  "epochs": 500,
+  "initial_loss": 0.6931471805599453,
+  "final_loss": 0.0389305619703217,
+  "model": "/home/pus/Documents/github/indirect-prompt-injection-detector/artifacts/model.json"
+}
